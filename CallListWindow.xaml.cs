@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+//version 1
 namespace CallBook
 {
     public partial class CallListWindow : Window
