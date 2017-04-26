@@ -26,6 +26,12 @@ namespace CallBook
         {
             InitializeComponent();
 
+            Log.addToLog("test1");
+            Log.addToLog("test2");
+            Log.addToLog("test1");
+
+
+
             dataBaseInit = DataBase.Init();
 
             if (!dataBaseInit)
