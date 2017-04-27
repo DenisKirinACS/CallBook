@@ -13,7 +13,8 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-
+using CallBook.Methods;
+using System.Windows.Threading;
 //version 1
 //test
 namespace CallBook
@@ -22,6 +23,26 @@ namespace CallBook
     {
         private bool dataBaseInit = false;
         private Point mouseClickPos;
+        private object m_Lock = new object();
+        private bool _workInProgress = false;
+        private bool workInProgress
+        {
+            get
+            {
+                bool tmp = true;
+
+                lock (m_Lock)
+                    tmp = _workInProgress;
+
+                return tmp;
+
+            }
+            set
+            {
+                lock (m_Lock)
+                    _workInProgress = value;
+            }
+        }
         public CallListWindow()
         {
             InitializeComponent();
@@ -40,39 +61,87 @@ namespace CallBook
             }
             else
             {
-                Refresh();
+                ItemsPreloader.SetUIRefresh(UIRefresh);
+                //ItemsPreloader.LaunchFilter(DataBase.GetAll());
+                ItemsPreloader.RefreshAll();
             }
 
-            
+        /*    Task.Run(delegate
+            {
+                while (true)
+                {
+                    SimpleTask();
+                }
+            });*/ //Лишь показыват что приложение не глючит! Приятного дня!
         }
 
-        private void Refresh()
+        /*public void SimpleTask()
         {
-            itemList.Children.Clear();
-            
+            Dispatcher.Invoke(new Action(() =>
+            {
+                firstName.Text = "";
+            }));
+
+            for (int i = 0; i < 55; i++)
+            {
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    firstName.Text += "|";
+                }));
+                System.Threading.Thread.Sleep(50);
+            }
+
+        }*/
+
+        public bool UIRefresh(List<DataBaseItem> dataBaseItem, bool clear)
+        {
+            if (dataBaseItem == null) return false;
+            //Иногда проскакивает список с пустым элементо
+            //Запрещаем такое вообще расматривать
+            if (dataBaseItem.Count == 0) return false;
+
+            if (clear)
+            {
+                //Добавляем в очередь для обработки в UI
+                this.Dispatcher.Invoke(() => itemList.Children.Clear());
+            }
+
             if (dataBaseInit)
             {
-                List<DataBaseItem> list = DataBase.GetAll();
-                for (int i = 0; i < list.Count; i++)
+                //Добавляем в очередь для обработки в UI
+                Dispatcher.Invoke(new Action(() =>
                 {
-                    dataViewItem item = new dataViewItem();
-                    item.firstName.Text = list[i].firstName;
-                    item.secondName.Text = list[i].secondName;
-                    item.lastName.Text = list[i].lastName;
-                    item.phone.Text = list[i].phone;
-                    //item.email.Text = list[i].email;
-                    //item.address.Text = list[i].street;
+                    //Небольшая оптимизация
+                    int count = dataBaseItem.Count;
+                    //Console.WriteLine("ItemsCount:" + count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        dataViewItem item = new dataViewItem();
+                        item.firstName.Text = dataBaseItem[i].firstName;
+                        item.secondName.Text = dataBaseItem[i].secondName;
+                        item.lastName.Text = dataBaseItem[i].lastName;
+                        item.phone.Text = dataBaseItem[i].phone;
+                            //item.email.Text = list[i].email;
+                            //item.address.Text = list[i].street;
 
-                    item.Tag = list[i];
-                    item.MouseDown += ItemMouseDown;
-                    item.MouseEnter += ItemMouseEnter;
-                    item.MouseLeave += ItemMouseLeave;
+                        item.Tag = dataBaseItem[i];
+                        item.MouseDown += ItemMouseDown;
+                        item.MouseEnter += ItemMouseEnter;
+                        item.MouseLeave += ItemMouseLeave;
 
-
-                    itemList.Children.Add(item);
-                    
-                }
+                        itemList.Children.Add(item);
+                    }
+                }));
             }
+
+            //Уменьшаем подвисания
+            //Поскольку этот метод запускает из другого потока нужно
+            //Дать не большое время для того что бы диспечер успел
+            //Выполнить предыдущие задание
+            //При не обходимости подымаем это значение
+            System.Threading.Thread.Sleep(1);
+
+            return true;
         }
 
         private void ItemMouseLeave(object sender, MouseEventArgs e)
@@ -124,7 +193,7 @@ namespace CallBook
             {
                 EditWindow editWindow = new EditWindow(this, null);
                 editWindow.ShowDialog();
-                Refresh();
+                //Refresh();
             }
 
         }
@@ -211,5 +280,15 @@ namespace CallBook
             this.Width = 574;
         }
 
+        private void Search_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+            if (itemList == null) return;
+            ItemSearching.Searching(Search.Text);
+            
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+        }
     }
 }

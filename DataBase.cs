@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.SQLite;
 using System.IO;
+using CallBook.Methods;
+using System.Threading;
 
 namespace CallBook
 {
@@ -35,6 +37,17 @@ namespace CallBook
     {
         public static string dbName = "DataBase.db";
         private static SQLiteConnection connection = null;
+        
+        private static object m_locker = new object();
+        private static Task SQLRequestHandlerTask = null;
+        public static bool SQLRequestHandlerAlive
+        {
+            get
+            {
+                return SQLRequestHandlerTask != null;
+            }
+        }
+        
         public static bool Init()
         {
             try
@@ -186,62 +199,62 @@ namespace CallBook
         }
 
         //SELECT* FROM main WHERE `firstName` LIKE '%Andrey%' OR flat = -1;
-        public static List<DataBaseItem> GetAll()
+        public static bool LoadAll(object sender)
         {
-            List<DataBaseItem> list = null;
-
+            if (sender.GetType() != typeof(ItemsPreloader)) return false;
             try
             {
+                //if (SQLRequestHandlerTask != null)
+                //    while (SQLRequestHandlerAlive) Thread.Sleep(200);
                 string sql = "SELECT * FROM main ORDER BY `firstName` ASC;";
+                TaskSelectSQLRequestAndAddToPreloader(sql);
 
-                SQLiteCommand command = new SQLiteCommand(connection);
-                command.CommandText = sql;
-                SQLiteDataReader reader = command.ExecuteReader();
-
-                list = new List<DataBaseItem>();
-
-                while (reader.Read())
-                {
-                    DataBaseItem dataBaseItem = new DataBaseItem();
-                    
-                    dataBaseItem.id = Convert.ToInt32(reader["id"]);
-                    dataBaseItem.firstName = (string)reader["firstName"];
-                    dataBaseItem.secondName = (string)reader["secondName"];
-                    dataBaseItem.lastName = (string)reader["lastName"];
-                    dataBaseItem.phone = (string)reader["phone"];
-                    dataBaseItem.email = (string)reader["email"];
-                    dataBaseItem.county = (string)reader["county"];
-                    dataBaseItem.city = (string)reader["city"];
-                    dataBaseItem.street = (string)reader["street"];
-                    dataBaseItem.house = (string)reader["house"];
-                    dataBaseItem.flat = Convert.ToInt32(reader["flat"]);
-
-                    list.Add(dataBaseItem);
-                }
             }
             catch(Exception e)
             {
-
+                Console.WriteLine(e);
+                return false;
             }
 
-            return list;
+            return true;
         }
 
-        public static List<DataBaseItem> Get(string firstName)
+        public static bool Load(object sender,string firstName)
         {
-            List<DataBaseItem> list = null;
-
+            if (sender.GetType() != typeof(ItemSearching)) return false; 
             try
             {
+                //Console.WriteLine("");
                 string sql = "SELECT * FROM main WHERE firstName LIKE '%" + firstName + "%' or phone LIKE '%" + firstName + "%' ORDER BY `firstName` ASC;";
+                //string sql = "SELECT * FROM main WHERE firstName LIKE '%" + firstName + "%' ORDER BY `firstName` ASC;";
+                TaskSelectSQLRequestAndAddToPreloader(sql);
 
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("===== Load ==== " + e);
+                return false;
+            }
+            return true;
+        }
+
+        private static async void TaskSelectSQLRequestAndAddToPreloader(string sql)
+        {
+            await RequestTask(sql);
+            SQLRequestHandlerTask = null;
+
+        }
+
+        private static Task RequestTask(string sql)
+        {
+            SQLRequestHandlerTask = Task.Run(async delegate
+            {
                 SQLiteCommand command = new SQLiteCommand(connection);
                 command.CommandText = sql;
                 SQLiteDataReader reader = command.ExecuteReader();
-
-                list = new List<DataBaseItem>();
-
-                while (reader.Read())
+                //if(ItemsPreloader.BufferEmpty)
+                //ItemsPreloader.Clear().Wait();
+                while (await reader.ReadAsync())
                 {
                     DataBaseItem dataBaseItem = new DataBaseItem();
 
@@ -256,18 +269,10 @@ namespace CallBook
                     dataBaseItem.street = (string)reader["street"];
                     dataBaseItem.house = (string)reader["house"];
                     dataBaseItem.flat = Convert.ToInt32(reader["flat"]);
-
-                    list.Add(dataBaseItem);
+                    ItemsPreloader.AddToBuffer(dataBaseItem);
                 }
-            }
-            catch (Exception e)
-            {
-
-            }
-
-            return list;
+            });
+            return SQLRequestHandlerTask;
         }
-
-
     }
 }

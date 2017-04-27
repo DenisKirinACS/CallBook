@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         AllowsTransparency="True" 
         ResizeMode="CanResizeWithGrip"        
-        Title="MainWindow" Height="354" Width="574" WindowStyle="None" Background="#01FFFFFF" Margin="50" >
+        Title="MainWindow" Height="354" Width="574" WindowStyle="None" Background="#01FFFFFF" Margin="50" Closing="Window_Closing" >
 
     <Border BorderThickness="2" CornerRadius="9" Background="#9988DCFB" Padding="4" >
         <Border.BorderBrush>
@@ -47,13 +47,13 @@
                     <ColumnDefinition Width="354*"/>
                 </Grid.ColumnDefinitions>
                 <Border BorderThickness="1" CornerRadius="9" Height="32" Margin="20,0,20,0" Background="White" BorderBrush="#FF4E6578">
-                    <TextBox Name="Serach" Margin="4" Background="{x:Null}" BorderBrush="{x:Null}" CaretBrush="#FFF16666" SelectionBrush="#CC3399FF"  />
+                    <TextBox Name="Search" Margin="4" Background="{x:Null}" BorderBrush="{x:Null}" CaretBrush="#FFF16666" SelectionBrush="#CC3399FF" SelectionChanged="Search_SelectionChanged"  />
                 </Border>
             </Grid>
 
             <Grid Grid.Row="2" Grid.Column="1" Background="White">
                 <StackPanel Name="itemDataPanel" HorizontalAlignment="Left" Margin="10">
-                    <TextBlock Text="Country"/>
+                    <TextBlock Name="firstName" Text="Country"/>
                     <TextBlock Text="City"/>
                     <TextBlock Text="Country"/>
                     <TextBlock Text="Country"/>
