@@ -23,36 +23,9 @@ namespace CallBook
     {
         private bool dataBaseInit = false;
         private Point mouseClickPos;
-        private object m_Lock = new object();
-        private bool _workInProgress = false;
-        private bool workInProgress
-        {
-            get
-            {
-                bool tmp = true;
-
-                lock (m_Lock)
-                    tmp = _workInProgress;
-
-                return tmp;
-
-            }
-            set
-            {
-                lock (m_Lock)
-                    _workInProgress = value;
-            }
-        }
         public CallListWindow()
         {
             InitializeComponent();
-
-            Log.addToLog("test1");
-            Log.addToLog("test2");
-            Log.addToLog("test1");
-
-
-
             dataBaseInit = DataBase.Init();
 
             if (!dataBaseInit)
