@@ -117,6 +117,9 @@
       <DependentUpon>EditWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Log.cs" />
+    <Compile Include="Methods\BufferList.cs" />
+    <Compile Include="Methods\ItemSearching.cs" />
+    <Compile Include="Methods\ItemsPreloader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
