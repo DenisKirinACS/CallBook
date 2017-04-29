@@ -25,7 +25,9 @@ namespace CallBook
         private Point mouseClickPos;
         public CallListWindow()
         {
+            Log.addToLog("[Program Started]");
             InitializeComponent();
+
             dataBaseInit = DataBase.Init();
 
             if (!dataBaseInit)
