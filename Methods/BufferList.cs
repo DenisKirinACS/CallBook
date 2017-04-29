@@ -91,18 +91,12 @@ namespace CallBook.Methods
             BufferList b = new BufferList();
             while (b.mainList.Count == 0 && groupIndexer < groupList.Count)
             {
-                //Console.WriteLine("Stage 1");
-                if (groupList[groupIndexer].parameter == null) continue;
-                //Console.WriteLine("Stage 2");
                 if (!groupList[groupIndexer].parameter.listCanUse) {
                     groupList[groupIndexer].parameter.AutoUnlock();
                     continue;
                 }
-                //Console.WriteLine("Stage 3");
-                if (groupList[groupIndexer].mainList.Count == 0) continue;
-                    //throw new Exception("Failed pick from buffer maybe miss item?");
+
                 b = groupList[groupIndexer];
-                //Console.WriteLine("Stage 4");
                 if (b.mainList.Count != 0)
                 {
                     ++groupIndexer;
@@ -122,9 +116,8 @@ namespace CallBook.Methods
         /// <returns></returns>
         public bool Reader(bool clearInComplete)
         {
-            if (groupList[0].mainList.Count == 0) return false;
-
-            bool retVal = proceedCount <= groupList.Count;
+            bool retVal = proceedCount <= groupList.Count &&
+                          groupIndexer < groupList.Count;
             if (retVal)
                 ++proceedCount;
             else
@@ -145,17 +138,6 @@ namespace CallBook.Methods
             //Console.WriteLine(DateTime.Now + " buffer begin clean!");
             while (true)
             {
-                //Console.WriteLine("Stage 1");
-                if (groupList[0].parameter == null) continue;
-                //Console.WriteLine("Stage 2");
-                if (!groupList[0].parameter.listCanUse)
-                {
-                    groupList[0].parameter.AutoUnlock();
-                    continue;
-                }
-                //Console.WriteLine("Stage 3");
-                if (groupList[0].mainList.Count == 0) continue;
-
                 groupList.RemoveAt(0);
 
 

@@ -74,9 +74,8 @@ namespace CallBook.Methods
                 item.email = buffer[index].email;
                 item.street = buffer[index].street;
                 tempList.Add(item);
-                //bufferList.RemoveAt(0);
             }
-
+            Log.addToLog("Items added:" + buffer.Count);
             return tempList;
         }
 
